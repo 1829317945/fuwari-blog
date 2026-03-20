@@ -90,10 +90,10 @@ const totalPosts = PLACES.reduce((a, p) => a + p.posts.length, 0);
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
-    html,body{height:100%!important;overflow:hidden!important;margin:0!important;padding:0!important;}
-    body{display:flex!important;flex-direction:column!important;font-family:'Noto Sans SC',sans-serif!important;}
-    html.dark  {--a:#f5a623;--bg:#1d1e2c;--s1:#242538;--s2:#2d2e45;--bd:rgba(255,255,255,0.08);--gw:rgba(245,166,35,0.18);--t1:#eaeaf0;--t2:#9191a8;--t3:#5c5c78;--sh:0 8px 32px rgba(0,0,0,.45);--mb:#1a1b2e;--cb:#1e1e2e;}
-    html:not(.dark){--a:#c97d10;--bg:#f0f0f5;--s1:#fff;--s2:#eaeaf2;--bd:rgba(0,0,0,.08);--gw:rgba(201,125,16,.10);--t1:#1a1a2e;--t2:#55556a;--t3:#9999b0;--sh:0 8px 32px rgba(0,0,0,.10);--mb:#dde0e8;--cb:#fff;}
+    /* IMPORTANT: 只作用于地图根节点，避免影响其它页面滚动（Swup 页面切换会保留部分全局样式） */
+    #xmap-root{min-height:100vh!important;font-family:'Noto Sans SC',sans-serif!important;}
+    html.dark  #xmap-root {--a:#f5a623;--bg:#1d1e2c;--s1:#242538;--s2:#2d2e45;--bd:rgba(255,255,255,0.08);--gw:rgba(245,166,35,0.18);--t1:#eaeaf0;--t2:#9191a8;--t3:#5c5c78;--sh:0 8px 32px rgba(0,0,0,.45);--mb:#1a1b2e;--cb:#1e1e2e;}
+    html:not(.dark) #xmap-root {--a:#c97d10;--bg:#f0f0f5;--s1:#fff;--s2:#eaeaf2;--bd:rgba(0,0,0,.08);--gw:rgba(201,125,16,.10);--t1:#1a1a2e;--t2:#55556a;--t3:#9999b0;--sh:0 8px 32px rgba(0,0,0,.10);--mb:#dde0e8;--cb:#fff;}
 
     /* Navbar */
     #xnav{flex-shrink:0!important;height:4.5rem!important;background:var(--cb)!important;border-bottom:1px solid var(--bd)!important;display:flex!important;align-items:center!important;padding:0 1.5rem!important;gap:8px!important;z-index:50!important;}
@@ -113,7 +113,7 @@ const totalPosts = PLACES.reduce((a, p) => a + p.posts.length, 0);
     /* 标记点 */
     .leaflet-div-icon{background:transparent!important;border:none!important;}
     .tm-ring{width:14px!important;height:14px!important;border-radius:50%!important;border:2.5px solid var(--a)!important;background:rgba(245,166,35,.4)!important;box-shadow:0 0 0 5px rgba(245,166,35,.15),0 0 16px rgba(245,166,35,.5)!important;transition:all .2s!important;}
-    html:not(.dark) .tm-ring{background:rgba(201,125,16,.35)!important;box-shadow:0 0 0 5px rgba(201,125,16,.12),0 0 12px rgba(201,125,16,.4)!important;}
+    html:not(.dark) #xmap-root .tm-ring{background:rgba(201,125,16,.35)!important;box-shadow:0 0 0 5px rgba(201,125,16,.12),0 0 12px rgba(201,125,16,.4)!important;}
     .tm-ring.hl{width:18px!important;height:18px!important;border-color:#fff!important;background:var(--a)!important;box-shadow:0 0 0 5px rgba(245,166,35,.3),0 0 20px rgba(245,166,35,.7)!important;margin:-2px!important;}
 
     /* 弹窗卡片 hover（无法内联）*/
@@ -292,7 +292,15 @@ const totalPosts = PLACES.reduce((a, p) => a + p.posts.length, 0);
     var ic=L.divIcon({html:el,className:'',iconSize:[18,18],iconAnchor:[9,9]});
     var mk=L.marker([p.lat,p.lng],{icon:ic}).addTo(map);
     mk.on('mouseover',function(){showP(p);});
-    mk.on('mouseout', function(){setTimeout(function(){if(!pop.matches(':hover'))hideP();},220);});
+    mk.on('mouseout', function(){
+      // 给一点缓冲时间，避免卡片刚显示就因为 mouseout 过快隐藏
+      setTimeout(function(){
+        var stillHoveringPopup = pop.matches(':hover');
+        var sidebarEl = document.getElementById('xpl');
+        var stillHoveringSidebar = !!(sidebarEl && sidebarEl.matches(':hover'));
+        if(!stillHoveringPopup && !stillHoveringSidebar) hideP();
+      }, 500);
+    });
   });
 
   /* 侧边栏（全内联 style，零外部 CSS 依赖）*/
