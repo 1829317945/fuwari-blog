@@ -1,0 +1,365 @@
+---
+// src/pages/map.astro
+import { siteConfig, navBarConfig } from "../config";
+import { LinkPresets } from "../constants/link-presets";
+import { LinkPreset } from "../types/config";
+import { url } from "../utils/url-utils";
+import { DEFAULT_THEME, LIGHT_MODE, DARK_MODE, AUTO_MODE, PAGE_WIDTH } from "../constants/constants";
+import { defaultFavicons } from "../constants/icon";
+import ConfigCarrier from "@components/ConfigCarrier.astro";
+
+const configHue = siteConfig.themeColor.hue;
+const favicons = siteConfig.favicon.length > 0 ? siteConfig.favicon : defaultFavicons;
+const siteLang = siteConfig.lang.replace("_", "-");
+const links = navBarConfig.links.map((item) => {
+  if (typeof item === "number") return LinkPresets[item];
+  return item;
+});
+
+const PLACES = [
+  { id:'beijing', name:'北京', icon:'🏯', lat:39.9042, lng:116.4074, subtitle:'2024年10月 · 4天3夜', posts:[
+    { title:'故宫深秋：朱墙黄瓦的光影交织', excerpt:'午后的太和殿前，游客如织，但找到一个安静的角落，那些岁月的痕迹便扑面而来...', date:'2024-10-05', emoji:'🏯', cover:'', href:'#', lat:39.9169, lng:116.3907 },
+    { title:'胡同骑行：用单车丈量老北京', excerpt:'从南锣鼓巷到烟袋斜街，车轮碾过的青石板，每一块都有故事。', date:'2024-10-06', emoji:'🚲', cover:'', href:'#', lat:39.9360, lng:116.4033 },
+    { title:'长城日出·慕田峪', excerpt:'凌晨四点出发，只为在那段长城上，看见属于北京的第一缕晨光。', date:'2024-10-07', emoji:'🌄', cover:'', href:'#', lat:40.4319, lng:116.5693 },
+  ]},
+  { id:'shanghai', name:'上海', icon:'🌆', lat:31.2304, lng:121.4737, subtitle:'2025年3月 · 5天4夜', posts:[
+    { title:'外滩夜景：新与旧的对话', excerpt:'浦东的霓虹与浦西的巴洛克建筑隔江相望，这座城市从不拒绝矛盾的美。', date:'2025-03-10', emoji:'✨', cover:'', href:'#', lat:31.2397, lng:121.4905 },
+    { title:'武康路漫步记', excerpt:'梧桐树道、咖啡馆、独立书店，上海最文艺的街道之一。', date:'2025-03-11', emoji:'☕', cover:'', href:'#', lat:31.2147, lng:121.4429 },
+  ]},
+  { id:'chengdu', name:'成都', icon:'🐼', lat:30.5728, lng:104.0668, subtitle:'2024年5月 · 7天', posts:[
+    { title:'成都慢生活：一座来了就不想走的城市', excerpt:'打麻将的老人、喝盖碗茶的茶馆、宽窄巷子里的糖画，这里的时间流速不一样。', date:'2024-05-18', emoji:'🐼', cover:'', href:'#', lat:30.6624, lng:104.0626 },
+    { title:'青城山云雾间的道教秘境', excerpt:'入山时还是烈日，行至半山已是云遮雾绕，仿佛真的进入了另一个世界。', date:'2024-05-20', emoji:'⛩️', cover:'', href:'#', lat:30.9009, lng:103.5723 },
+    { title:'夜探宽窄巷子·最地道的成都夜生活', excerpt:'串串香、冒菜、抄手，每一家小店背后都藏着一个四川人的人生故事。', date:'2024-05-19', emoji:'🍜', cover:'', href:'#', lat:30.6718, lng:104.0503 },
+  ]},
+  { id:'guilin', name:'桂林', icon:'⛰️', lat:25.2736, lng:110.2901, subtitle:'2023年11月 · 4天', posts:[
+    { title:'漓江漂流：山水之间的悠然时光', excerpt:'竹筏轻荡，两岸奇峰倒影水中，这幅画只有在这里才能看到原稿。', date:'2023-11-08', emoji:'🛶', cover:'', href:'#', lat:25.0647, lng:110.4070 },
+    { title:'遇龙河晨雾：最美的桂林不在城区', excerpt:'清晨六点，薄雾还未散去，遇龙河上只有我和两位老渔夫。', date:'2023-11-09', emoji:'🌫️', cover:'', href:'#', lat:24.7927, lng:110.4363 },
+  ]},
+  { id:'xian', name:'西安', icon:'🗿', lat:34.3416, lng:108.9398, subtitle:'2024年1月 · 5天', posts:[
+    { title:'兵马俑：时间停在了公元前210年', excerpt:'八千个士兵，每一张脸都不同，站在坑道边俯视，历史的重量压过来。', date:'2024-01-15', emoji:'🗿', cover:'', href:'#', lat:34.3845, lng:109.2784 },
+    { title:'回民街宵夜全攻略', excerpt:'肉夹馍、羊肉泡馍、凉皮，西安的夜宵是一门严肃的学问。', date:'2024-01-16', emoji:'🫔', cover:'', href:'#', lat:34.2658, lng:108.9400 },
+  ]},
+  { id:'tokyo', name:'东京', icon:'🗼', lat:35.6762, lng:139.6503, subtitle:'2025年1月 · 8天', posts:[
+    { title:'新宿御苑冬日樱花·寒绯樱盛开', excerpt:'一月的东京，寒绯樱已先行报到，粉红色的花朵在冬日蓝天下格外耀眼。', date:'2025-01-20', emoji:'🌸', cover:'', href:'#', lat:35.6852, lng:139.7100 },
+    { title:'築地场外市场早市体验', excerpt:'清晨五点的筑地，新鲜的金枪鱼、海胆、三文鱼，站着就能吃完一顿最好的早餐。', date:'2025-01-21', emoji:'🍣', cover:'', href:'#', lat:35.6654, lng:139.7707 },
+    { title:'深夜的涩谷·霓虹与孤独', excerpt:'跨年夜的涩谷路口，数万人潮中我一个人站着，却莫名感到一种属于都市的温暖。', date:'2025-01-22', emoji:'🌃', cover:'', href:'#', lat:35.6580, lng:139.7016 },
+  ]},
+  { id:'kyoto', name:'京都', icon:'⛩️', lat:35.0116, lng:135.7681, subtitle:'2025年1月 · 3天', posts:[
+    { title:'祇园花见小路·时光逆流而上', excerpt:'石板路、町家、偶尔闪过的艺妓身影，京都某些地方真的没有变。', date:'2025-01-24', emoji:'🏮', cover:'', href:'#', lat:35.0037, lng:135.7758 },
+    { title:'伏见稻荷·千本鸟居的秘密出口', excerpt:'大部分游客在下山口折返，但若继续向上爬，等待你的是清净无人的山顶和绝美的俯瞰。', date:'2025-01-25', emoji:'⛩️', cover:'', href:'#', lat:34.9671, lng:135.7727 },
+  ]},
+  { id:'paris', name:'巴黎', icon:'🗼', lat:48.8566, lng:2.3522, subtitle:'2023年7月 · 10天', posts:[
+    { title:'卢浮宫一日：与名画相遇的方法论', excerpt:'不要试图看完整个卢浮宫，选择五幅你真正想见的作品，在它们面前停留半小时以上。', date:'2023-07-12', emoji:'🖼️', cover:'', href:'#', lat:48.8606, lng:2.3376 },
+    { title:'玛黑区漫步·巴黎最不像巴黎的地方', excerpt:'精品买手店、涂鸦街道、犹太餐厅与同性恋酒吧并排而立，这才是真实的巴黎。', date:'2023-07-14', emoji:'🎨', cover:'', href:'#', lat:48.8553, lng:2.3575 },
+  ]},
+  { id:'bali', name:'巴厘岛', icon:'🌴', lat:-8.3405, lng:115.0920, subtitle:'2023年12月 · 7天', posts:[
+    { title:'乌布稻田漫步·绿色是一种信仰', excerpt:'梯田在晨光中层层叠叠，农夫俯身插秧，远处的火山还顶着云帽，如画。', date:'2023-12-20', emoji:'🌾', cover:'', href:'#', lat:-8.5069, lng:115.2625 },
+    { title:'天空之门·神庙与落日的约定', excerpt:'带洱庙的落日仪式，每天下午五点，无数游客和神灵共同等待太阳入海的那一刻。', date:'2023-12-21', emoji:'🌅', cover:'', href:'#', lat:-8.2044, lng:115.0171 },
+  ]},
+];
+
+const placesJson = JSON.stringify(PLACES);
+const totalCities = PLACES.length;
+const overseas = PLACES.filter(p => !(p.lat > 18 && p.lat < 54 && p.lng > 73 && p.lng < 135)).length;
+const totalPosts = PLACES.reduce((a, p) => a + p.posts.length, 0);
+---
+
+<!DOCTYPE html>
+<html lang={siteLang} class="bg-[var(--page-bg)] transition text-[14px] md:text-[16px]">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width"/>
+  <title>足迹地图 - {siteConfig.title}</title>
+  <meta name="description" content="记录每一段旅途的坐标与故事"/>
+  {favicons.map(f => (
+    <link rel="icon"
+      href={f.src.startsWith('/') ? url(f.src) : f.src}
+      sizes={f.sizes}
+      media={f.theme && `(prefers-color-scheme: ${f.theme})`}
+    />
+  ))}
+  <script is:inline define:vars={{DEFAULT_THEME,LIGHT_MODE,DARK_MODE,AUTO_MODE,configHue,PAGE_WIDTH}}>
+    const t = localStorage.getItem('theme') || DEFAULT_THEME;
+    if(t===DARK_MODE) document.documentElement.classList.add('dark');
+    else if(t===LIGHT_MODE) document.documentElement.classList.remove('dark');
+    else if(window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+    document.documentElement.style.setProperty('--hue', localStorage.getItem('hue') || configHue);
+  </script>
+  <style define:vars={{ configHue, 'page-width': `${PAGE_WIDTH}rem` }}></style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    html,body{height:100%!important;overflow:hidden!important;margin:0!important;padding:0!important;}
+    body{display:flex!important;flex-direction:column!important;font-family:'Noto Sans SC',sans-serif!important;}
+    html.dark  {--a:#f5a623;--bg:#1d1e2c;--s1:#242538;--s2:#2d2e45;--bd:rgba(255,255,255,0.08);--gw:rgba(245,166,35,0.18);--t1:#eaeaf0;--t2:#9191a8;--t3:#5c5c78;--sh:0 8px 32px rgba(0,0,0,.45);--mb:#1a1b2e;--cb:#1e1e2e;}
+    html:not(.dark){--a:#c97d10;--bg:#f0f0f5;--s1:#fff;--s2:#eaeaf2;--bd:rgba(0,0,0,.08);--gw:rgba(201,125,16,.10);--t1:#1a1a2e;--t2:#55556a;--t3:#9999b0;--sh:0 8px 32px rgba(0,0,0,.10);--mb:#dde0e8;--cb:#fff;}
+
+    /* Navbar */
+    #xnav{flex-shrink:0!important;height:4.5rem!important;background:var(--cb)!important;border-bottom:1px solid var(--bd)!important;display:flex!important;align-items:center!important;padding:0 1.5rem!important;gap:8px!important;z-index:50!important;}
+    #xnav a.xl{font-size:1rem!important;font-weight:700!important;color:oklch(0.75 0.14 var(--hue,250))!important;text-decoration:none!important;display:flex!important;align-items:center!important;gap:8px!important;padding:6px 14px!important;border-radius:8px!important;transition:background .15s!important;white-space:nowrap!important;}
+    #xnav a.xl:hover{background:color-mix(in srgb,oklch(0.75 0.14 var(--hue,250)) 10%,transparent)!important;}
+    #xnav .xnl{display:flex!important;gap:2px!important;margin-left:8px!important;}
+    #xnav .xnl a{font-size:.9rem!important;font-weight:700!important;color:oklch(0.6 0.05 var(--hue,250))!important;text-decoration:none!important;padding:6px 14px!important;border-radius:8px!important;transition:all .15s!important;white-space:nowrap!important;display:flex!important;align-items:center!important;gap:4px!important;}
+    #xnav .xnl a:hover,#xnav .xnl a.cur{background:color-mix(in srgb,oklch(0.75 0.14 var(--hue,250)) 10%,transparent)!important;color:oklch(0.75 0.14 var(--hue,250))!important;}
+    #xnav .xnl a svg{width:11px!important;height:11px!important;opacity:.4!important;flex-shrink:0!important;}
+    #xnav .xnr{margin-left:auto!important;display:flex!important;align-items:center!important;}
+    #xthm{width:2.75rem!important;height:2.75rem!important;border-radius:8px!important;background:transparent!important;border:none!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:1.2rem!important;color:oklch(0.6 0.05 var(--hue,250))!important;transition:all .15s!important;}
+    #xthm:hover{background:color-mix(in srgb,oklch(0.75 0.14 var(--hue,250)) 10%,transparent)!important;}
+
+    /* 地图外层 */
+    #xmap-root{flex:1!important;display:flex!important;overflow:hidden!important;min-height:0!important;}
+
+    /* 标记点 */
+    .leaflet-div-icon{background:transparent!important;border:none!important;}
+    .tm-ring{width:14px!important;height:14px!important;border-radius:50%!important;border:2.5px solid var(--a)!important;background:rgba(245,166,35,.4)!important;box-shadow:0 0 0 5px rgba(245,166,35,.15),0 0 16px rgba(245,166,35,.5)!important;transition:all .2s!important;}
+    html:not(.dark) .tm-ring{background:rgba(201,125,16,.35)!important;box-shadow:0 0 0 5px rgba(201,125,16,.12),0 0 12px rgba(201,125,16,.4)!important;}
+    .tm-ring.hl{width:18px!important;height:18px!important;border-color:#fff!important;background:var(--a)!important;box-shadow:0 0 0 5px rgba(245,166,35,.3),0 0 20px rgba(245,166,35,.7)!important;margin:-2px!important;}
+
+    /* 弹窗卡片 hover（无法内联）*/
+    .xcard:hover{border-color:var(--a)!important;background:var(--gw)!important;transform:translateY(-1px)!important;}
+    .xcard.hl{border-color:var(--a)!important;background:var(--gw)!important;box-shadow:inset 0 0 0 1.5px var(--a)!important;}
+
+    /* 侧边栏条目 hover */
+    .xci:hover{background:var(--s2)!important;}
+    .xci.on{border-left-color:var(--a)!important;background:var(--gw)!important;}
+    .xai:hover{background:rgba(245,166,35,.04)!important;border-left-color:rgba(245,166,35,.3)!important;}
+    .xai.on{border-left-color:var(--a)!important;background:var(--gw)!important;}
+    .xai:hover .xat{color:var(--t1)!important;}
+    .xyb:hover,.xyb.on{background:var(--gw)!important;border-color:var(--a)!important;color:var(--a)!important;}
+    .xmb:hover{color:var(--t1)!important;background:var(--s2)!important;}
+
+    /* Leaflet */
+    .leaflet-control-zoom,.leaflet-popup,.leaflet-attribution,.leaflet-bottom.leaflet-right{display:none!important;}
+  </style>
+</head>
+<body>
+<ConfigCarrier />
+
+<!-- Navbar -->
+<div id="xnav">
+  <a href={url('/')} class="xl">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    {siteConfig.title}
+  </a>
+  <div class="xnl">
+    {links.map(l => (
+      <a href={l.external ? l.url : url(l.url)} target={l.external ? '_blank' : undefined} class={l.url === '/map/' ? 'cur' : ''}>
+        {l.name}
+        {l.external && <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>}
+      </a>
+    ))}
+  </div>
+  <div class="xnr"><button id="xthm">🌙</button></div>
+</div>
+
+<!-- 地图主体：全部用 style 属性内联，100% 绕开 Fuwari 全局样式 -->
+<div id="xmap-root">
+
+  <!-- 侧边栏 -->
+  <div style="width:280px;flex-shrink:0;overflow:hidden;background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;transition:background .3s;">
+    <!-- 标题 -->
+    <div style="padding:20px 20px 12px;border-bottom:1px solid var(--bd);">
+      <div style="font-size:15px;font-weight:600;color:var(--t1);font-family:'Noto Serif SC',serif;margin-bottom:4px;line-height:1.4;">📍 我的足迹</div>
+      <div style="font-size:12px;color:var(--t3);">每一段旅途，都是一首未完的诗</div>
+    </div>
+    <!-- 年份 -->
+    <div style="display:flex;gap:6px;padding:12px 20px;flex-wrap:wrap;border-bottom:1px solid var(--bd);">
+      <button class="xyb on" onclick="tmY(this)" style="background:var(--gw);border:1px solid var(--a);color:var(--a);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;font-family:inherit;line-height:1.4;">全部</button>
+      <button class="xyb" onclick="tmY(this)" style="background:var(--s2);border:1px solid var(--bd);color:var(--t2);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;font-family:inherit;line-height:1.4;">2025</button>
+      <button class="xyb" onclick="tmY(this)" style="background:var(--s2);border:1px solid var(--bd);color:var(--t2);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;font-family:inherit;line-height:1.4;">2024</button>
+      <button class="xyb" onclick="tmY(this)" style="background:var(--s2);border:1px solid var(--bd);color:var(--t2);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;font-family:inherit;line-height:1.4;">2023</button>
+    </div>
+    <!-- 列表 -->
+    <div id="xpl" style="flex:1;overflow-y:auto;padding:8px 0;scrollbar-width:thin;scrollbar-color:var(--s2) transparent;"></div>
+  </div>
+
+  <!-- 地图 -->
+  <div id="xmw" style="flex:1;position:relative;min-width:0;">
+    <div id="xmap" style="width:100%;height:100%;background:var(--mb);"></div>
+    <!-- 提示 -->
+    <div style="position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:800;background:var(--s1);border:1px solid var(--bd);border-radius:20px;padding:5px 16px;font-size:12px;color:var(--t2);pointer-events:none;white-space:nowrap;box-shadow:var(--sh);">
+      🌍 悬浮标记点查看游记 · 点击城市展开文章 · 滚轮缩放
+    </div>
+    <!-- 控件 -->
+    <div style="position:absolute;top:16px;right:16px;z-index:800;display:flex;flex-direction:column;gap:8px;">
+      <div class="xmb" id="xbr" style="width:36px;height:36px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;color:var(--t2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:all .15s;box-shadow:var(--sh);">⌂</div>
+      <div class="xmb" id="xbi" style="width:36px;height:36px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;color:var(--t2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:all .15s;box-shadow:var(--sh);">＋</div>
+      <div class="xmb" id="xbo" style="width:36px;height:36px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;color:var(--t2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:all .15s;box-shadow:var(--sh);">－</div>
+    </div>
+    <!-- 统计 -->
+    <div style="position:absolute;bottom:20px;left:20px;z-index:800;background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:12px 16px;box-shadow:var(--sh);display:flex;gap:20px;">
+      <div style="text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--a);font-family:'Noto Serif SC',serif;">{totalCities}</div><div style="font-size:11px;color:var(--t3);margin-top:1px;">到访城市</div></div>
+      <div style="text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--a);font-family:'Noto Serif SC',serif;">{overseas}</div><div style="font-size:11px;color:var(--t3);margin-top:1px;">境外足迹</div></div>
+      <div style="text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--a);font-family:'Noto Serif SC',serif;">{totalPosts}</div><div style="font-size:11px;color:var(--t3);margin-top:1px;">篇游记</div></div>
+    </div>
+    <!-- 弹窗 -->
+    <div id="xpop" style="position:absolute;z-index:900;pointer-events:none;opacity:0;transform:translateY(8px) scale(.98);transition:opacity .2s,transform .2s;width:320px;">
+      <div style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);overflow:hidden;">
+        <div style="padding:14px 16px 10px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px;">
+          <div id="xpi" style="font-size:20px;line-height:1;flex-shrink:0;"></div>
+          <div>
+            <div id="xpn" style="font-size:15px;font-weight:600;color:var(--t1);font-family:'Noto Serif SC',serif;"></div>
+            <div id="xps" style="font-size:11px;color:var(--t3);margin-top:2px;"></div>
+          </div>
+        </div>
+        <div id="xpc" style="padding:10px 12px;display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--s2) transparent;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script is:inline define:vars={{ placesJson }}>
+  window.__PL__ = JSON.parse(placesJson);
+</script>
+<script is:inline>
+(function(){
+  var PL = window.__PL__;
+
+  /* 主题 */
+  function dark(){ return document.documentElement.classList.contains('dark'); }
+  var tb = document.getElementById('xthm');
+  tb.textContent = dark() ? '🌙' : '☀️';
+  tb.onclick = function(){
+    if(dark()){ document.documentElement.classList.remove('dark'); localStorage.theme='light'; }
+    else      { document.documentElement.classList.add('dark');    localStorage.theme='dark'; }
+    tb.textContent = dark() ? '🌙' : '☀️';
+    var nt = dark()?'dark':'light';
+    if(window._ml){ window._ml.bl.setUrl(T[nt].b); window._ml.ll.setUrl(T[nt].l); }
+  };
+
+  /* 地图 */
+  var T = {
+    dark: {b:'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',  l:'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'},
+    light:{b:'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', l:'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png'},
+  };
+  var map = L.map('xmap',{center:[35,105],zoom:4,zoomControl:false,attributionControl:false});
+  var t = dark()?'dark':'light';
+  var bl = L.tileLayer(T[t].b,{subdomains:'abcd',maxZoom:18}).addTo(map);
+  var ll = L.tileLayer(T[t].l,{subdomains:'abcd',maxZoom:18}).addTo(map);
+  window._ml = {bl:bl,ll:ll};
+
+  document.getElementById('xbr').onclick=function(){map.flyTo([35,105],4,{duration:1.2});};
+  document.getElementById('xbi').onclick=function(){map.zoomIn();};
+  document.getElementById('xbo').onclick=function(){map.zoomOut();};
+
+  /* 弹窗 */
+  var pop=document.getElementById('xpop'), mw=document.getElementById('xmw');
+
+  function showP(place,hl){
+    document.getElementById('xpi').textContent=place.icon;
+    document.getElementById('xpn').textContent=place.name;
+    document.getElementById('xps').textContent=place.subtitle;
+    var pc=document.getElementById('xpc');
+    pc.innerHTML=place.posts.map(function(p){
+      var h=hl&&p.title===hl.title;
+      var img=p.cover?'<img src="'+p.cover+'" alt="" onerror="this.parentElement.textContent=\''+p.emoji+'\'">':p.emoji;
+      return '<a class="xcard'+(h?' hl':'')+'" href="'+p.href+'" style="display:flex;gap:10px;padding:10px;border-radius:10px;background:var(--s2);border:1px solid var(--bd);cursor:pointer;text-decoration:none;transition:all .15s;align-items:flex-start;color:inherit;">'
+        +'<div style="width:64px;height:52px;border-radius:7px;background:var(--bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;overflow:hidden;line-height:1;">'+img+'</div>'
+        +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:12.5px;font-weight:500;color:var(--t1);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.title+'</div>'
+        +'<div style="font-size:11px;color:var(--t3);margin-top:3px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">'+p.excerpt+'</div>'
+        +'<div style="font-size:10.5px;color:var(--t3);margin-top:5px;display:flex;align-items:center;gap:4px;">📅 '+p.date+' <span style="color:var(--a);">→ 阅读全文</span></div>'
+        +'</div></a>';
+    }).join('');
+    if(hl) setTimeout(function(){var e=pc.querySelector('.hl');if(e)e.scrollIntoView({block:'nearest',behavior:'smooth'});},50);
+    var pt=map.latLngToContainerPoint([place.lat,place.lng]);
+    var rc=mw.getBoundingClientRect(),pw=320,ph=420;
+    var lx=pt.x+18,ty=pt.y-20;
+    if(lx+pw>rc.width-10)  lx=pt.x-pw-18;
+    if(ty+ph>rc.height-10) ty=rc.height-ph-10;
+    if(ty<10) ty=10;
+    pop.style.left=lx+'px'; pop.style.top=ty+'px';
+    pop.style.opacity='1'; pop.style.transform='translateY(0) scale(1)'; pop.style.pointerEvents='auto';
+    document.querySelectorAll('.xci').forEach(function(e){e.classList.remove('on');});
+    var si=document.querySelector('[data-id="'+place.id+'"]'); if(si) si.classList.add('on');
+    document.querySelectorAll('.tm-ring').forEach(function(r){r.classList.remove('hl');});
+    var rg=document.getElementById('rg-'+place.id); if(rg) rg.classList.add('hl');
+  }
+  function hideP(){
+    pop.style.opacity='0'; pop.style.transform='translateY(8px) scale(.98)'; pop.style.pointerEvents='none';
+    document.querySelectorAll('.tm-ring').forEach(function(r){r.classList.remove('hl');});
+    document.querySelectorAll('.xci').forEach(function(e){e.classList.remove('on');});
+  }
+  pop.addEventListener('mouseleave',hideP);
+  map.on('click',hideP);
+
+  /* 标记点 */
+  PL.forEach(function(p){
+    var el=document.createElement('div');
+    el.innerHTML='<div class="tm-ring" id="rg-'+p.id+'"></div>';
+    var ic=L.divIcon({html:el,className:'',iconSize:[18,18],iconAnchor:[9,9]});
+    var mk=L.marker([p.lat,p.lng],{icon:ic}).addTo(map);
+    mk.on('mouseover',function(){showP(p);});
+    mk.on('mouseout', function(){setTimeout(function(){if(!pop.matches(':hover'))hideP();},220);});
+  });
+
+  /* 侧边栏（全内联 style，零外部 CSS 依赖）*/
+  var S = {
+    ci: 'box-sizing:border-box;padding:10px 20px;cursor:pointer;border-left:3px solid transparent;transition:all .15s;display:flex;align-items:center;gap:10px;width:100%;',
+    ico:'box-sizing:border-box;width:32px;height:32px;border-radius:8px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;line-height:1;',
+    cn: 'font-size:13.5px;font-weight:500;color:var(--t1);',
+    cc: 'font-size:11px;background:var(--s2);color:var(--t2);border-radius:10px;padding:1px 7px;flex-shrink:0;',
+    cv: 'font-size:10px;color:var(--t3);transition:transform .2s;flex-shrink:0;',
+    pl: 'overflow:hidden;max-height:0;transition:max-height .28s ease;',
+    ai: 'box-sizing:border-box;padding:7px 20px 7px 52px;cursor:pointer;border-left:3px solid transparent;transition:all .15s;display:flex;align-items:flex-start;gap:8px;width:100%;',
+    ae: 'font-size:13px;flex-shrink:0;margin-top:1px;line-height:1;',
+    at: 'font-size:12px;color:var(--t2);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;',
+    ad: 'font-size:10px;color:var(--t3);margin-top:2px;',
+  };
+
+  document.getElementById('xpl').innerHTML = PL.map(function(p){
+    var posts = p.posts.map(function(post,i){
+      return '<div class="xai" data-id="'+p.id+'" data-pi="'+i+'" onclick="tmFP(\''+p.id+'\','+i+')" style="'+S.ai+'">'
+        +'<div style="'+S.ae+'">'+post.emoji+'</div>'
+        +'<div style="flex:1;min-width:0;">'
+        +'<div class="xat" style="'+S.at+'">'+post.title+'</div>'
+        +'<div style="'+S.ad+'">📅 '+post.date+'</div>'
+        +'</div></div>';
+    }).join('');
+    return '<div style="display:block;">'
+      +'<div class="xci" data-id="'+p.id+'" onclick="tmTC(\''+p.id+'\',this)" style="'+S.ci+'">'
+      +'<div style="'+S.ico+'">'+p.icon+'</div>'
+      +'<div style="flex:1;min-width:0;"><div style="'+S.cn+'">'+p.name+'</div></div>'
+      +'<div style="'+S.cc+'">'+p.posts.length+'篇</div>'
+      +'<div class="xcv" id="cv-'+p.id+'" style="'+S.cv+'">▶</div>'
+      +'</div>'
+      +'<div class="xcpl" id="cpl-'+p.id+'" style="'+S.pl+'">'+posts+'</div>'
+      +'</div>';
+  }).join('');
+
+  window.tmTC=function(id,el){
+    var cpl=document.getElementById('cpl-'+id), cv=document.getElementById('cv-'+id);
+    var open=cpl.classList.contains('on');
+    document.querySelectorAll('.xcpl').forEach(function(e){e.style.maxHeight='0';e.classList.remove('on');});
+    document.querySelectorAll('.xcv').forEach(function(e){e.style.transform='';e.classList.remove('on');});
+    document.querySelectorAll('.xci').forEach(function(e){e.classList.remove('on');});
+    if(!open){
+      cpl.style.maxHeight='600px'; cpl.classList.add('on');
+      cv.style.transform='rotate(90deg)'; cv.classList.add('on');
+      el.classList.add('on');
+      var place=PL.find(function(p){return p.id===id;}); if(place) map.flyTo([place.lat,place.lng],9,{duration:1.2});
+    }
+  };
+  window.tmFP=function(pid,idx){
+    var place=PL.find(function(p){return p.id===pid;}); if(!place) return;
+    var post=place.posts[idx]; if(!post) return;
+    document.querySelectorAll('.xai').forEach(function(e){e.classList.remove('on');});
+    var el=document.querySelector('[data-id="'+pid+'"][data-pi="'+idx+'"]'); if(el) el.classList.add('on');
+    map.flyTo([post.lat,post.lng],13,{duration:1.4});
+    setTimeout(function(){showP(place,post);},1500);
+  };
+  window.tmY=function(btn){
+    document.querySelectorAll('.xyb').forEach(function(b){
+      b.classList.remove('on');
+      b.style.background='var(--s2)'; b.style.borderColor='var(--bd)'; b.style.color='var(--t2)';
+    });
+    btn.classList.add('on');
+    btn.style.background='var(--gw)'; btn.style.borderColor='var(--a)'; btn.style.color='var(--a)';
+  };
+})();
+</script>
+</body>
+</html>
